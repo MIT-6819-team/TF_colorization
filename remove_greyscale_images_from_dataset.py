@@ -1,31 +1,39 @@
 #!/usr/bin/env python3
-import glob, subprocess, itertools, os
+import glob, subprocess, itertools, os, cv2
+import numpy as np
 from joblib import Parallel, delayed
 
 
 # Winter Guerra <winterg@mit.edu> Nov. 27 2016
 
 # Minimum saturation
-min_saturation = 0.01
-dataset_location = "/media/data/datasets/places_2/train_256_rgb_only/"
+min_saturation = 0.05
+dataset_location = "/root/persistant_data/datasets/places_2/train_256/"
 num_jobs=3
 
 def get_saturation(f):
-        command = "convert {} -colorspace HSL -channel g -separate +channel -format '%[fx:mean]' info:".format(f)
-        op = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
-        return float(op.stdout)
+        #command = "convert {} -colorspace HSL -channel g -separate +channel -format '%[fx:mean]' info:".format(f)
+        #op = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
+        #return float(op.stdout)
 
+	# Load image
+	img = cv2.imread(f)
+	# Convert BGR to HSV
+	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+	# Average the S layer
+	S_avg = np.average(hsv[:,:,1])
+	return S_avg
 
 # Get list of files
-filenames = glob.iglob(dataset_location + "**/*.jpg", recursive=True)
+filenames = glob.iglob(dataset_location + "**/*.jpg.greyscale", recursive=True)
 
 def worker_func(f):
 	# get saturation values for all files
 	saturation = get_saturation(f)
-
-	# filter results to only include files below our threshold
-	if saturation <= min_saturation:
-		os.rename(f, f+".greyscale")
+	
+	# Annotate the filenames of all files with their rough saturation value.
+	print((saturation, f))
+	#os.rename(f, f[:-10])
 	return
 
 # iterate in parallel and remove said files
