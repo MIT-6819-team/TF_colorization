@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import glob, subprocess, itertools, os, cv2, sys, ujson, gzip
+import glob2, itertools, cv2, sys, ujson, gzip
 import numpy as np
 from joblib import Parallel, delayed
 
@@ -10,7 +10,7 @@ from joblib import Parallel, delayed
 assert len(sys.argv) == 3, "Not enough arguments. EX. ./<script>.py /path/to/trainingset/ .JPEG"
 dataset_location = sys.argv[1]
 file_extension = sys.argv[2]
-num_jobs=3
+num_jobs=4
 
 print("Looking for files of type", file_extension, "from location", dataset_location)
 
@@ -24,7 +24,7 @@ def get_saturation(f):
 	return S_avg
 
 # Get list of files
-filenames = glob.iglob(dataset_location + "*/*" + file_extension)
+filenames = glob2.iglob(dataset_location + "**/*" + file_extension)
 
 # DEBUG
 #filenames = itertools.islice(filenames, 5)
