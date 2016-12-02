@@ -52,7 +52,7 @@ def setup_tensorflow_graph():
   return x, y_, y_output
 
 def conv_layer(prev_layer, prev_kernels, kernels, kernel_size, stride, dilation=None):
-  W_conv = weight_variable([5, 5, prev_kernels, kernels])
+  W_conv = weight_variable([kernel_size, kernel_size, prev_kernels, kernels])
   b_conv = bias_variable([kernels])
 
   return tf.nn.relu(conv2d(prev_layer, W_conv2, stride, dilation) + b_conv2)
