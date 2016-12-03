@@ -1,33 +1,23 @@
-import os
-import sys
-import random
-import json
-import math
-import time
-import fnmatch
-import os
-import scipy.misc
-sys.path.append( root + 'Utils/')
-
-import pandas as pd
 import numpy as np
-import tensorflow as tf
+import scipy.misc
 
-from PIL import Image
-from IPython.display import display
-from pprint import pprint
-from notebook_utils import *
 from skimage import color, io
 
 ab_to_dist = {}
 
-root = '/data/vision/torralba/health-habits/other/enes/'
+
+def gaussian(x, var):
+    '''Gaussian on np array'''
+    return np.exp(-(x**2) / (2 * var**2))
 
 
 def precompute_distributions():
     '''Precomputes the distribution we want for each integer a,b value.'''
     global ab_to_dist
     print "Precomputing distributions... will take a second"
+
+    quantized_array = np.load('pts_in_hull.npy')
+
     for a in range(-120, 120):
         for b in range(-120, 120):
             tiled_ab = np.tile([a, b], (313, 1))
