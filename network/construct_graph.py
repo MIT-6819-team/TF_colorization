@@ -1,5 +1,3 @@
-# TODO: Lab quantization, boost priors, loss
-
 def setup_tensorflow_graph():
   # Reconstruct the architecture from https://github.com/richzhang/colorization/blob/master/models/colorization_train_val_v2.prototxt
   # (I think this is the right one? Not sure)
