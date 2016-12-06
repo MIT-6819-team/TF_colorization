@@ -2,6 +2,7 @@ import ujson
 import gzip
 import numpy as np
 import random
+import time
 from path_to_data import image_path_to_image_and_distribution_tensor
 
 
@@ -39,6 +40,7 @@ class DataLoader(object):
         return x_batch, y__batch
 
     def get_test_batch(self):
+        lt = time.time()
         x_batch = np.zeros((len(self.test_batch), self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
         y__batch = np.zeros((len(self.test_batch), self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
 
@@ -48,6 +50,8 @@ class DataLoader(object):
 
             x_batch[i, ...] = x.reshape((256, 256, 1))
             y__batch[i, ...] = y_
+
+        print "Batch loading took ", (time.time() - lt)
 
         return x_batch, y__batch
 

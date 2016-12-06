@@ -2,6 +2,7 @@ import numpy as np
 import scipy.misc
 
 from skimage import color, io
+import time
 
 ab_to_dist = {}
 
