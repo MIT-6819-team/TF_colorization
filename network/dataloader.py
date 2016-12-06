@@ -12,7 +12,7 @@ class DataLoader(object):
 
 
     def __init__(self, batch_size, use_imagenet=True):
-	self.batch_size = batch_size
+	    self.batch_size = batch_size
         self._load_paths_and_threshold(use_imagenet)
         self.current_datapoint_index = 0
 
@@ -21,11 +21,11 @@ class DataLoader(object):
 	else:
 	    print "Don't know places root"
 
-    def next_batch(self, batch_size):
-        x_batch = np.zeros((batch_size, self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
-        y__batch = np.zeros((batch_size, self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
+    def next_batch(self):
+        x_batch = np.zeros((self.batch_size, self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
+        y__batch = np.zeros((self.batch_size, self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
 
-        for i in range(batch_size):
+        for i in range(self.batch_size):
             path = self.all_paths[self.current_datapoint_index]
             x, y_ = image_path_to_image_and_distribution_tensor(self.root + path)
 
