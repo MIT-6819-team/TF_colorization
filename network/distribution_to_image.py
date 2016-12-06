@@ -2,7 +2,7 @@ import numpy as np
 from PIL import Image
 from skimage import color
 
-quantized_array = np.load('/afs/csail.mit.edu/u/k/kocabey/TF_colorization/network/pts_in_hull.npy')
+quantized_array = np.load('pts_in_hull.npy')
 
 def get_colorized_image( image, prediction ):
   T = 0.38

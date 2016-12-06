@@ -17,7 +17,7 @@ class DataLoader(object):
         self.current_datapoint_index = 0
 
 	if use_imagenet:
-	    self.root = '/data/vision/torralba/yusuf/imagenet/data/images/train256/'
+	    self.root = '/root/persistant_data/datasets/imagenet/train256/'#'/data/vision/torralba/yusuf/imagenet/data/images/train256/'
 	else:
 	    print "Don't know places root"
 
