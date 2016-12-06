@@ -11,13 +11,16 @@ class DataLoader(object):
     INPUT_IMAGE_SIZE = 256
 
 
-    def __init__(self, batch_size, use_imagenet=True):
-	    self.batch_size = batch_size
+    def __init__(self, batch_size, use_imagenet=True, user_winter=True):
+        self.batch_size = batch_size
         self._load_paths_and_threshold(use_imagenet)
         self.current_datapoint_index = 0
 
 	if use_imagenet:
-	    self.root = '/root/persistant_data/datasets/imagenet/train256/'#'/data/vision/torralba/yusuf/imagenet/data/images/train256/'
+        if use_winter:
+	        self.root = '/root/persistant_data/datasets/imagenet/train256/'
+        else:
+            self.root = '/data/vision/torralba/yusuf/imagenet/data/images/train256/'
 	else:
 	    print "Don't know places root"
 

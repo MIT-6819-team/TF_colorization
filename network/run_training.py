@@ -11,9 +11,9 @@ training_batches = []
 batches_available = threading.Semaphore(0)
 DESIRED_BATCHES = 3
 
-def load_batch(dataset, BATCH_SIZE):
+def load_batch(dataset):
   lt = time.time()
-  data_x, data_y_ = dataset.next_batch(BATCH_SIZE)
+  data_x, data_y_ = dataset.next_batch()
   training_batches.append((data_x, data_y_))
   batches_available.release()
   print "Batch loaded in parallel ", (time.time() - lt)
@@ -26,7 +26,7 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 3000):
 
     saver = tf.train.Saver()
     dataset = DataLoader(BATCH_SIZE)
-    dataset.next_batch(BATCH_SIZE) # hack to precompute, remove this
+    dataset.next_batch() # hack to precompute, remove this
 
     loss = construct_graph.loss_function(y_output, y_)
     prediction = construct_graph.get_prediction(y_output)
@@ -34,12 +34,12 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 3000):
 
     sess.run(tf.initialize_all_variables())
 
-    for i in xrange(ITERATIONS): 
+    for i in xrange(ITERATIONS):
       lt = time.time()
       for b in xrange(DESIRED_BATCHES - len(training_batches)):
-        t = threading.Thread(target = load_batch, args = (dataset, BATCH_SIZE,))
+        t = threading.Thread(target = load_batch, args = (dataset,))
         t.start()
-      
+
       batches_available.acquire()
       data_x, data_y_ = training_batches[0]
       del training_batches[0]
@@ -50,7 +50,7 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 3000):
 
       #f.write(str(loss_res) + '\n'); f.flush()
 
-      if i % 1000 == 0: 
+      if i % 1000 == 0:
         _colorize_and_save_test_images(sess, dataset, prediction, i/1000, x)
         saver.save( sess, 'model/model')
 
@@ -64,4 +64,3 @@ def _colorize_and_save_test_images(sess, dataset, prediction, iteration, x):
     get_colorized_image(test_image_batch[i], test_image_predictions[i]).save('images/' + str(i) + '_' + str(iteration) + '.jpg')
 
 run_training()
-
