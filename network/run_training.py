@@ -18,7 +18,7 @@ def load_batch(dataset, BATCH_SIZE):
   batches_available.release()
   print "Batch loaded in parallel ", (time.time() - lt)
 
-def run_training(BATCH_SIZE = 32, ITERATIONS = 3000):
+def run_training(BATCH_SIZE = 32, ITERATIONS = 3000000):
   f = open('log.txt', 'w')
 
   with tf.Session() as sess:
