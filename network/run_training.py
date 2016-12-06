@@ -2,6 +2,8 @@ import tensorflow as tf
 import construct_graph
 from dataloader import DataLoader
 from distribution_to_image import get_colorized_image
+import warnings
+warnings.filterwarnings('ignore')
 
 def run_training(BATCH_SIZE = 32, ITERATIONS = 3000):
   f = open('log.txt', 'w')
