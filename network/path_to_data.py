@@ -34,8 +34,8 @@ def _precompute_distributions():
 
     quantized_array = np.load('/afs/csail.mit.edu/u/k/kocabey/TF_colorization/network/pts_in_hull.npy')
 
-    for a in xrange(-120, 120):
-        for b in xrange(-120, 120):
+    for a in xrange(-130, 130):
+        for b in xrange(-130, 130):
             tiled_ab = np.tile([a, b], (313, 1))
 
             distances = np.linalg.norm(quantized_array - tiled_ab, axis=1)

@@ -3,7 +3,7 @@ import construct_graph
 from dataloader import DataLoader
 from distribution_to_image import get_colorized_image
 
-def run_training(BATCH_SIZE = 1, ITERATIONS = 3000):
+def run_training(BATCH_SIZE = 32, ITERATIONS = 3000):
   f = open('log.txt', 'w')
 
   with tf.Session() as sess:
