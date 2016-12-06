@@ -2,8 +2,8 @@ import tensorflow as tf
 
 def setup_tensorflow_graph(BATCH_SIZE):
   
-  image_ = tf.placeholder( tf.float32, shape = [BATCH_SIZE, 256, 256, 1] )
-  output_ = tf.placeholder( tf.float32, shape = [BATCH_SIZE, 64, 64, 313])
+  image_ = tf.placeholder( tf.float32, shape = [None, 256, 256, 1] )
+  output_ = tf.placeholder( tf.float32, shape = [None, 64, 64, 313])
 
   W1_1 = weight_variable([3,3,1,64])
   b1_1 = bias_variable([64])

@@ -1,6 +1,8 @@
 # Ignore large files
 experiments/enes/model*
-
+network/model*
+network/images*
+network/log*
 
 
 
