@@ -4,8 +4,9 @@ from dataloader import DataLoader
 from distribution_to_image import get_colorized_image
 import warnings
 warnings.filterwarnings('ignore')
+import time
 
-def run_training(BATCH_SIZE = 32, ITERATIONS = 3000):
+def run_training(BATCH_SIZE = 32, ITERATIONS = float("inf")):
   f = open('log.txt', 'w')
 
   with tf.Session() as sess:
@@ -13,6 +14,7 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 3000):
 
     saver = tf.train.Saver()
     dataset = DataLoader(BATCH_SIZE)
+    dataset.next_batch() # hack to precompute, remove this
 
     loss = construct_graph.loss_function(y_output, y_)
     prediction = construct_graph.get_prediction(y_output)
@@ -21,14 +23,20 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 3000):
     sess.run(tf.initialize_all_variables())
 
     for i in xrange(ITERATIONS):
-      data_x, data_y_ = dataset.next_batch(BATCH_SIZE)
+      lt = time.time()
+
+      data_x, data_y_ = dataset.next_batch()
+
+      lt2 = time.time()
       _, loss_res = sess.run([train_step, loss], feed_dict={x: data_x, y_: data_y_})
+      lt3 = time.time()
 
-      f.write(str(loss_res) + '\n'); f.flush()
-
-      if i % 1000 == 0: 
+      if i % 1000 == 0:
         _colorize_and_save_test_images(sess, dataset, prediction, i/1000, x)
         saver.save( sess, 'model/model')
+
+      print "Iteration ", i, "Data loading: ", (lt2 - lt), "Backprop: ", (lt3 - lt2), "Full", (time.time() - lt), "Accuracy:", loss_res
+
 
 def _colorize_and_save_test_images(sess, dataset, prediction, iteration, x):
   test_image_batch, _ = dataset.get_test_batch()
@@ -37,4 +45,3 @@ def _colorize_and_save_test_images(sess, dataset, prediction, iteration, x):
     get_colorized_image(test_image_batch[i], test_image_predictions[i]).save('images/' + str(i) + '_' + str(iteration) + '.jpg')
 
 run_training()
-
