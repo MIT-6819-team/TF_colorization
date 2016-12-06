@@ -35,7 +35,7 @@ def _precompute_distributions():
     global ab_to_dist
     print "Precomputing distributions... will take a second"
 
-    quantized_array = np.load('pts_in_hull.npy')
+    quantized_array = np.load('/afs/csail.mit.edu/u/k/kocabey/TF_colorization/network/pts_in_hull.npy')
 
     for a in range(-120, 120):
         for b in range(-120, 120):
