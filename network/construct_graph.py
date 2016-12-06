@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 def setup_tensorflow_graph(BATCH_SIZE):
-  
+
   image_ = tf.placeholder( tf.float32, shape = [None, 256, 256, 1] )
   output_ = tf.placeholder( tf.float32, shape = [None, 64, 64, 313])
 
@@ -89,7 +89,7 @@ def setup_tensorflow_graph(BATCH_SIZE):
   b6_2 = bias_variable([512])
   conv6_2 = tf.nn.atrous_conv2d( conv6_1, W6_2, 2, padding = 'SAME') + b6_2
   conv6_2 = tf.nn.relu(conv6_2)
-  
+
   W6_3 = weight_variable([3,3,512,512])
   b6_3 = bias_variable([512])
   conv6_3 = tf.nn.atrous_conv2d( conv6_2, W6_3, 2, padding = 'SAME') + b6_3
@@ -135,12 +135,18 @@ def setup_tensorflow_graph(BATCH_SIZE):
   b_ab = bias_variable([313])
   conv_ab = conv2d( conv8_3, W_ab, 1 ) + b_ab
   output = tf.nn.relu(conv_ab)
-  
+
   return image_, output_, output
 
 def loss_function(output, output_):
   loss = tf.nn.softmax_cross_entropy_with_logits( output,  output_ )
   return tf.reduce_mean(loss)
+
+def weighted_loss_function(output, output_):
+    quantized_frequencies = np.load('../preprocessing/quantized_counts.npy')
+
+    loss = tf.nn.softmax_cross_entropy_with_logits( output,  output_ )
+    return tf.reduce_mean(loss)
 
 def get_prediction( output ):
   prediction = tf.nn.softmax( output )

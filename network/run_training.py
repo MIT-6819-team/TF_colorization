@@ -5,20 +5,8 @@ from distribution_to_image import get_colorized_image
 import warnings
 warnings.filterwarnings('ignore')
 import time
-import threading
 
-training_batches = []
-batches_available = threading.Semaphore(0)
-DESIRED_BATCHES = 3
-
-def load_batch(dataset, BATCH_SIZE):
-  lt = time.time()
-  data_x, data_y_ = dataset.next_batch(BATCH_SIZE)
-  training_batches.append((data_x, data_y_))
-  batches_available.release()
-  print "Batch loaded in parallel ", (time.time() - lt)
-
-def run_training(BATCH_SIZE = 32, ITERATIONS = 3000000):
+def run_training(BATCH_SIZE = 32, ITERATIONS = float("inf")):
   f = open('log.txt', 'w')
 
   with tf.Session() as sess:
@@ -26,7 +14,7 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 3000000):
 
     saver = tf.train.Saver()
     dataset = DataLoader(BATCH_SIZE)
-    dataset.next_batch(BATCH_SIZE) # hack to precompute, remove this
+    dataset.next_batch() # hack to precompute, remove this
 
     loss = construct_graph.loss_function(y_output, y_)
     prediction = construct_graph.get_prediction(y_output)
@@ -34,23 +22,16 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 3000000):
 
     sess.run(tf.initialize_all_variables())
 
-    for i in xrange(ITERATIONS): 
+    for i in xrange(ITERATIONS):
       lt = time.time()
-      for b in xrange(DESIRED_BATCHES - len(training_batches)):
-        t = threading.Thread(target = load_batch, args = (dataset, BATCH_SIZE,))
-        t.start()
-      
-      batches_available.acquire()
-      data_x, data_y_ = training_batches[0]
-      del training_batches[0]
+
+      data_x, data_y_ = dataset.next_batch()
 
       lt2 = time.time()
       _, loss_res = sess.run([train_step, loss], feed_dict={x: data_x, y_: data_y_})
       lt3 = time.time()
 
-      #f.write(str(loss_res) + '\n'); f.flush()
-
-      if i % 1000 == 0: 
+      if i % 1000 == 0:
         _colorize_and_save_test_images(sess, dataset, prediction, i/1000, x)
         saver.save( sess, 'model/model')
 
@@ -64,4 +45,3 @@ def _colorize_and_save_test_images(sess, dataset, prediction, iteration, x):
     get_colorized_image(test_image_batch[i], test_image_predictions[i]).save('images/' + str(i) + '_' + str(iteration) + '.jpg')
 
 run_training()
-
