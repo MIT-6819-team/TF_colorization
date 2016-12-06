@@ -4,12 +4,13 @@ from dataloader import DataLoader
 from distribution_to_image import get_colorized_image
 
 def run_training(BATCH_SIZE = 1, ITERATIONS = 3000):
-  saver = tf.train.Saver()
-  dataset = DataLoader()
   f = open('log.txt', 'w')
 
   with tf.Session() as sess:
     x, y_, y_output = construct_graph.setup_tensorflow_graph(BATCH_SIZE)
+
+    saver = tf.train.Saver()
+    dataset = DataLoader()
 
     loss = construct_graph.loss_function()
     prediction = construct_graph.get_prediction(output)
