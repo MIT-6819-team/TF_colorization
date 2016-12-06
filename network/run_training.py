@@ -5,20 +5,8 @@ from distribution_to_image import get_colorized_image
 import warnings
 warnings.filterwarnings('ignore')
 import time
-import threading
 
-training_batches = []
-batches_available = threading.Semaphore(0)
-DESIRED_BATCHES = 3
-
-def load_batch(dataset):
-  lt = time.time()
-  data_x, data_y_ = dataset.next_batch()
-  training_batches.append((data_x, data_y_))
-  batches_available.release()
-  print "Batch loaded in parallel ", (time.time() - lt)
-
-def run_training(BATCH_SIZE = 32, ITERATIONS = 3000):
+def run_training(BATCH_SIZE = 32, ITERATIONS = float("inf")):
   f = open('log.txt', 'w')
 
   with tf.Session() as sess:
@@ -36,19 +24,12 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 3000):
 
     for i in xrange(ITERATIONS):
       lt = time.time()
-      for b in xrange(DESIRED_BATCHES - len(training_batches)):
-        t = threading.Thread(target = load_batch, args = (dataset,))
-        t.start()
 
-      batches_available.acquire()
-      data_x, data_y_ = training_batches[0]
-      del training_batches[0]
+      data_x, data_y_ = dataset.next_batch()
 
       lt2 = time.time()
       _, loss_res = sess.run([train_step, loss], feed_dict={x: data_x, y_: data_y_})
       lt3 = time.time()
-
-      #f.write(str(loss_res) + '\n'); f.flush()
 
       if i % 1000 == 0:
         _colorize_and_save_test_images(sess, dataset, prediction, i/1000, x)
