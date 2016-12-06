@@ -8,21 +8,18 @@ ab_to_dist = {}
 
 def image_path_to_image_and_distribution_tensor(path):
     '''Converts an image path to a LAB image and a [64, 64, 313] tensor of color distribution values.'''
-    img = io.imread(path)
-    img = scipy.misc.imresize(img, (64, 64))
-    img = color.rgb2lab(img)
+    raw_img = io.imread(path)
+    lab_img = color.rgb2lab(raw_img)
 
-    assert img.shape == (64, 64, 3)
-
-    img = img[:, :, 1:3]
+    img = lab_img[:, :, 1:3]
     dist = np.zeros([64, 64, 313])
 
     h, w, _ = dist.shape
-    for x in range(w):
-        for y in range(h):
-            dist[x][y] = _map_ab_to_distribution(tuple(np.floor(img[x][y]).tolist()))
+    for x in xrange(w):
+        for y in xrange(h):
+            dist[x][y] = _map_ab_to_distribution(tuple(np.floor(img[4 * x][4 * y])))
 
-    return img, dist
+    return lab_img[:, :, 0], dist
 
 
 def _gaussian(x, var):
@@ -37,8 +34,8 @@ def _precompute_distributions():
 
     quantized_array = np.load('/afs/csail.mit.edu/u/k/kocabey/TF_colorization/network/pts_in_hull.npy')
 
-    for a in range(-120, 120):
-        for b in range(-120, 120):
+    for a in xrange(-120, 120):
+        for b in xrange(-120, 120):
             tiled_ab = np.tile([a, b], (313, 1))
 
             distances = np.linalg.norm(quantized_array - tiled_ab, axis=1)

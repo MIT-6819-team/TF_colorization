@@ -1,12 +1,14 @@
 import ujson
 import gzip
 import numpy as np
+import random
 from path_to_data import image_path_to_image_and_distribution_tensor
 
 
 class DataLoader(object):
     SATURATION_THRESHOLD = 0.1
     INPUT_IMAGE_SIZE = 256
+    TEST_BATCH_SIZE = 32
 
     def __init__(self, use_imagenet=True):
         self._load_paths_and_threshold(use_imagenet)
@@ -29,8 +31,23 @@ class DataLoader(object):
 
         return x_batch, y__batch
 
+    def get_test_batch(self):
+        x_batch = np.zeros((len(self.test_batch), self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
+        y__batch = np.zeros((len(self.test_batch), self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 313))
+
+        for i in range(len(self.test_batch)):
+            path = self.test_batch[i]
+            x, y_ = image_path_to_image_and_distribution_tensor(path)
+
+            x_batch[i, ...] = x
+            y__batch[i, ...] = y_
+
+        return x_batch, y__batch
+
     def _load_paths_and_threshold(self, use_imagenet):
         '''Loads all the paths and removes those below the saturation threshold.'''
         source = 'imagenet_train_256_saturation_values.json' if use_imagenet else 'places_2_256_training_saturation_index.json'
         f = ujson.load(gzip.open('../dataset_indexes/' + source, 'rt'))
         self.all_paths = [path for path in f.keys() if f[path] > self.SATURATION_THRESHOLD]
+
+        self.test_batch = self.all_paths[:TEST_BATCH_SIZE]

@@ -1,63 +1,150 @@
-def setup_tensorflow_graph():
-  # Reconstruct the architecture from https://github.com/richzhang/colorization/blob/master/models/colorization_train_val_v2.prototxt
-  # (I think this is the right one? Not sure)
-  x = tf.placeholder(tf.float32, shape=[None,WIDTH,HEIGHT,1])
-  y_ = tf.placeholder(tf.float32, shape=[None,WIDTH,HEIGHT,OUTPUT_CHANNELS])
+import tensorflow as tf
 
-  layer_1_1 = conv_layer(x, prev_kernels=3, kernels=64, kernel_size=3, stride=1)
-  layer_1_2 = conv_layer(layer_1_1, prev_kernels=64, kernels=64, kernel_size=3, stride=2)
-  layer_1_bn = batch_norm(layer_1_2)
+def setup_tensorflow_graph(BATCH_SIZE):
+  
+  image_ = tf.placeholder( tf.float32, shape = [BATCH_SIZE, 256, 256, 1] )
+  output_ = tf.placeholder( tf.float32, shape = [BATCH_SIZE, 64, 64, 313])
 
-  layer_2_1 = conv_layer(layer_1_bn, prev_kernels=64, kernels=128, kernel_size=3, stride=1)
-  layer_2_2 = conv_layer(layer_2_1, prev_kernels=128, kernels=128, kernel_size=3, stride=2)
-  layer_2_bn = batch_norm(layer_2_2)
+  W1_1 = weight_variable([3,3,1,64])
+  b1_1 = bias_variable([64])
+  conv1_1 = conv2d( image_, W1_1, 1 ) + b1_1
+  conv1_1 = tf.nn.relu(conv1_1)
 
-  layer_3_1 = conv_layer(layer_2_bn, prev_kernels=128, kernels=256, kernel_size=3, stride=1)
-  layer_3_2 = conv_layer(layer_3_1, prev_kernels=256, kernels=256, kernel_size=3, stride=1)
-  layer_3_3 = conv_layer(layer_3_2, prev_kernels=256, kernels=256, kernel_size=3, stride=2)
-  layer_3_bn = batch_norm(layer_3_3)
+  W1_2 = weight_variable([3,3,64,64])
+  b1_2 = bias_variable([64])
+  conv1_2 = conv2d( conv1_1, W1_2, 2 ) + b1_2
+  conv1_2 = tf.nn.relu(conv1_2)
 
-  layer_4_1 = conv_layer(layer_3_bn, prev_kernels=256, kernels=512, kernel_size=3, stride=1)
-  layer_4_2 = conv_layer(layer_4_1, prev_kernels=512, kernels=512, kernel_size=3, stride=1)
-  layer_4_3 = conv_layer(layer_4_2, prev_kernels=512, kernels=512, kernel_size=3, stride=1)
-  layer_4_bn = batch_norm(layer_4_3)
+  conv1_2 = tf.contrib.layers.batch_norm(conv1_2)
 
-  layer_5_1 = conv_layer(layer_4_bn, prev_kernels=256, kernels=512, kernel_size=3, stride=1, dilation=2)
-  layer_5_2 = conv_layer(layer_5_1, prev_kernels=512, kernels=512, kernel_size=3, stride=1, dilation=2)
-  layer_5_3 = conv_layer(layer_5_2, prev_kernels=512, kernels=512, kernel_size=3, stride=1, dilation=2)
-  layer_5_bn = batch_norm(layer_5_3)
+  W2_1 = weight_variable([3,3,64,128])
+  b2_1 = bias_variable([128])
+  conv2_1 = conv2d( conv1_2, W2_1, 1 ) + b2_1
+  conv2_1 = tf.nn.relu(conv2_1)
 
-  layer_6_1 = conv_layer(layer_5_bn, prev_kernels=512, kernels=512, kernel_size=3, stride=1, dilation=2)
-  layer_6_2 = conv_layer(layer_6_1, prev_kernels=512, kernels=512, kernel_size=3, stride=1, dilation=2)
-  layer_6_3 = conv_layer(layer_6_2, prev_kernels=512, kernels=512, kernel_size=3, stride=1, dilation=2)
-  layer_6_bn = batch_norm(layer_6_3)
+  W2_2 = weight_variable([3,3,128,128])
+  b2_2 = bias_variable([128])
+  conv2_2 = conv2d( conv2_1, W2_2, 2 ) + b2_2
+  conv2_2 = tf.nn.relu(conv2_2)
 
-  layer_7_1 = conv_layer(layer_6_bn, prev_kernels=512, kernels=512, kernel_size=3, stride=1)  
-  layer_7_2 = conv_layer(layer_7_1, prev_kernels=512, kernels=512, kernel_size=3, stride=1)
-  layer_7_3 = conv_layer(layer_7_2, prev_kernels=512, kernels=512, kernel_size=3, stride=1)
-  layer_7_bn = batch_norm(layer_7_3)
+  conv2_2 = tf.contrib.layers.batch_norm(conv2_2)
 
-  layer_8_1 = conv_layer(layer_7_bn, prev_kernels=512, kernels=256, kernel_size=4, stride=2)  
-  layer_8_2 = conv_layer(layer_8_1, prev_kernels=256, kernels=256, kernel_size=3, stride=1)
-  layer_8_3 = conv_layer(layer_8_2, prev_kernels=256, kernels=256, kernel_size=3, stride=1)
+  W3_1 = weight_variable([3,3,128,256])
+  b3_1 = bias_variable([256])
+  conv3_1 = conv2d( conv2_2, W3_1, 1 ) + b3_1
+  conv3_1 = tf.nn.relu(conv3_1)
 
-  layer_8_313 = conv_layer(layer_8_3, prev_kernels=256, kernels=313, kernel_size=1, stride=1)  
-  layer_8_313_rh = 2.606 * layer_8_313 # TODO: Why is this done? Is this right?
-  layer8_313_softmax = tf.nn.softmax(layer_8_313_rh)
-  class8_ab = conv_layer(layer8_313_softmax, prev_kernels=313, kernels=2, kernel_size=1, stride=1)  
+  W3_2 = weight_variable([3,3,256,256])
+  b3_2 = bias_variable([256])
+  conv3_2 = conv2d( conv3_1, W3_2, 1 ) + b3_2
+  conv3_2 = tf.nn.relu(conv3_2)
 
-  y_output = h_pool4
-  return x, y_, y_output
+  W3_3 = weight_variable([3,3,256,256])
+  b3_3 = bias_variable([256])
+  conv3_3 = conv2d( conv3_2, W3_3, 2 ) + b3_3
+  conv3_3 = tf.nn.relu(conv3_3)
 
-def conv_layer(prev_layer, prev_kernels, kernels, kernel_size, stride, dilation=None):
-  W_conv = weight_variable([kernel_size, kernel_size, prev_kernels, kernels])
-  b_conv = bias_variable([kernels])
+  conv3_3 = tf.contrib.layers.batch_norm(conv3_3)
 
-  return tf.nn.relu(conv2d(prev_layer, W_conv2, stride, dilation) + b_conv2)
+  W4_1 = weight_variable([3,3,256,512])
+  b4_1 = bias_variable([512])
+  conv4_1 = conv2d( conv3_3, W4_1, 1 ) + b4_1
+  conv4_1 = tf.nn.relu(conv4_1)
 
-def resize_layer(prev_layer, size)
-  return tf.image.resize_bilinear(h_pool1, size)#, align_corners=None, name=None)
+  W4_2 = weight_variable([3,3,512,512])
+  b4_2 = bias_variable([512])
+  conv4_2 = conv2d( conv4_1, W4_2, 1 ) + b4_2
+  conv4_2 = tf.nn.relu(conv4_2)
 
+  W4_3 = weight_variable([3,3,512,512])
+  b4_3 = bias_variable([512])
+  conv4_3 = conv2d( conv4_2, W4_3, 1 ) + b4_3
+  conv4_3 = tf.nn.relu(conv4_3)
+
+  conv4_3 = tf.contrib.layers.batch_norm(conv4_3)
+
+  W5_1 = weight_variable([3,3,512,512])
+  b5_1 = bias_variable([512])
+  conv5_1 = tf.nn.atrous_conv2d( conv4_3, W5_1, 2, padding = 'SAME') + b5_1
+  conv5_1 = tf.nn.relu(conv5_1)
+
+  W5_2 = weight_variable([3,3,512,512])
+  b5_2 = bias_variable([512])
+  conv5_2 = tf.nn.atrous_conv2d( conv5_1, W5_2, 2, padding = 'SAME') + b5_2
+  conv5_2 = tf.nn.relu(conv5_2)
+
+  W5_3 = weight_variable([3,3,512,512])
+  b5_3 = bias_variable([512])
+  conv5_3 = tf.nn.atrous_conv2d( conv5_2, W5_3, 2, padding = 'SAME') + b5_3
+  conv5_3 = tf.nn.relu(conv5_3)
+
+  conv5_3 = tf.contrib.layers.batch_norm(conv5_3)
+
+  W6_1 = weight_variable([3,3,512,512])
+  b6_1 = bias_variable([512])
+  conv6_1 = tf.nn.atrous_conv2d( conv5_3, W6_1, 2, padding = 'SAME') + b6_1
+  conv6_1 = tf.nn.relu(conv6_1)
+
+  W6_2 = weight_variable([3,3,512,512])
+  b6_2 = bias_variable([512])
+  conv6_2 = tf.nn.atrous_conv2d( conv6_1, W6_2, 2, padding = 'SAME') + b6_2
+  conv6_2 = tf.nn.relu(conv6_2)
+  
+  W6_3 = weight_variable([3,3,512,512])
+  b6_3 = bias_variable([512])
+  conv6_3 = tf.nn.atrous_conv2d( conv6_2, W6_3, 2, padding = 'SAME') + b6_3
+  conv6_3 = tf.nn.relu(conv6_3)
+
+  conv6_3 = tf.contrib.layers.batch_norm(conv6_3)
+
+  W7_1 = weight_variable([3,3,512,256])
+  b7_1 = bias_variable([256])
+  conv7_1 = conv2d( conv6_3, W7_1, 1 ) + b7_1
+  conv7_1 = tf.nn.relu(conv7_1)
+
+  W7_2 = weight_variable([3,3,256,256])
+  b7_2 = bias_variable([256])
+  conv7_2 = conv2d( conv7_1, W7_2, 1 ) + b7_2
+  conv7_2 = tf.nn.relu(conv7_2)
+
+  W7_3 = weight_variable([3,3,256,256])
+  b7_3 = bias_variable([256])
+  conv7_3 = conv2d( conv7_2, W7_3, 1 ) + b7_3
+  conv7_3 = tf.nn.relu(conv7_3)
+
+  conv7_3 = tf.contrib.layers.batch_norm(conv7_3)
+
+  conv7_3 = tf.image.resize_images(conv7_3, [64,64])
+
+  W8_1 = weight_variable([4,4,256,128])
+  b8_1 = bias_variable([128])
+  conv8_1 = conv2d( conv7_3, W8_1, 1 ) + b8_1
+  conv8_1 = tf.nn.relu(conv8_1)
+
+  W8_2 = weight_variable([3,3,128,128])
+  b8_2 = bias_variable([128])
+  conv8_2 = conv2d( conv8_1, W8_2, 1 ) + b8_2
+  conv8_2 = tf.nn.relu(conv8_2)
+
+  W8_3 = weight_variable([3,3,128,128])
+  b8_3 = bias_variable([128])
+  conv8_3 = conv2d( conv8_2, W8_3, 1 ) + b8_3
+  conv8_3 = tf.nn.relu(conv8_3)
+
+  W_ab = weight_variable([1,1,128,313])
+  b_ab = bias_variable([313])
+  conv_ab = conv2d( conv8_3, W_ab, 1 ) + b_ab
+  output = tf.nn.relu(conv_ab)
+  
+  return image_, output_, output
+
+def loss_function(output, output_):
+  loss = tf.nn.softmax_cross_entropy_with_logits( output,  output_ )
+  return tf.reduce_mean(loss)
+
+def get_prediction( output ):
+  prediction = tf.nn.softmax( output )
+  return tf.image.resize_images( prediction, [256,256] )
 
 def weight_variable(shape):
   initial = tf.truncated_normal(shape, stddev=0.1)
@@ -67,16 +154,5 @@ def bias_variable(shape):
   initial = tf.constant(0.1, shape=shape)
   return tf.Variable(initial)
 
-def conv2d(x, W, stride, dilation=None):
-  if dilation is None:
-    return tf.nn.conv2d(x, W, strides=[1, stride, stride, 1], padding='SAME')
-  else:
-    return tf.nn.atrous_conv2d(x, W, dilation, padding='SAME')
-
-def max_pool_2x2(x):
-  return tf.nn.max_pool(x, ksize=[1, 2, 2, 1],
-                        strides=[1, 1, 1, 1], padding='SAME') #was [1, 2, 2, 1]
-
-# def conv_and_resize_layer(prev_layer, prev_kernels, kernels, kernel_size, resize_size):
-#   conv_l = conv_layer(prev_layer, prev_kernels, kernels, kernel_size)
-#   return resize_layer(conv_l, resize_size)
+def conv2d(x, W, s):
+  return tf.nn.conv2d(x, W, strides=[1, s, s, 1], padding='SAME')
