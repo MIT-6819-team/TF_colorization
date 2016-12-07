@@ -8,7 +8,7 @@ import time
 
 RESTORE_FROM_X_ITERATIONS = 61000
 
-def run_training(BATCH_SIZE = 10, ITERATIONS = float("inf")):
+def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999):
   f = open('log.txt', 'w')
 
   with tf.Session() as sess:
@@ -17,19 +17,18 @@ def run_training(BATCH_SIZE = 10, ITERATIONS = float("inf")):
     print "Setup dataloader"
     saver = tf.train.Saver()
     dataset = DataLoader(BATCH_SIZE)
-    dataset.next_batch() # hack to precompute, remove this
 
     print "Setup graph"
     loss = construct_graph.loss_function(y_output, y_)
     prediction = construct_graph.get_prediction(y_output)
     train_step = tf.train.AdamOptimizer(1e-4).minimize(loss)
  
+    sess.run(tf.initialize_all_variables())
     if RESTORE_FROM_X_ITERATIONS:
         print "Restoring model."
-        saver.restore(sess, "model/model.ckpt")
+        saver.restore(sess, "model/model")
     else:
         print "Starting model from scratch."
-        sess.run(tf.initialize_all_variables())
 
 
     for i in xrange(ITERATIONS):

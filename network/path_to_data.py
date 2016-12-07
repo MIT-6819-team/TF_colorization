@@ -59,3 +59,5 @@ def _map_ab_to_distribution(ab):
         _precompute_distributions()
 
     return ab_to_dist[ab]
+
+_precompute_distributions()
