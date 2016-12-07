@@ -2,23 +2,21 @@ import ujson
 import gzip
 import numpy as np
 import random
-import threading
 import time
 from path_to_data import image_path_to_image_and_distribution_tensor
+
 
 
 class DataLoader(object):
     SATURATION_THRESHOLD = 0.1
     OUTPUT_IMAGE_SIZE = 64
     INPUT_IMAGE_SIZE = 256
+    num_preprocess_threads = 16
+
 
     def __init__(self, batch_size, use_imagenet=True, use_winter=True):
         self.batch_size = batch_size
         self._load_paths_and_threshold(use_imagenet)
-
-        self.training_batches = []
-        self.batches_available = threading.Semaphore(0)
-        self.DESIRED_QUEUED_BATCHES = 3
 
     	if use_imagenet:
             if use_winter:
@@ -28,6 +26,7 @@ class DataLoader(object):
     	else:
     	    print "Don't know places root"
 
+ '''
     def next_batch(self):
         """Gets the next batch from the dataset and starts loading others in parallel."""
         # Make sure that we always have enough batches precomputed
@@ -39,6 +38,28 @@ class DataLoader(object):
         del self.training_batches[0]
 
         return data_x, data_y_
+'''
+
+    def _generate_image_and_label_batch(image, label, min_queue_examples,
+        	                            batch_size, shuffle):
+          if shuffle:
+    images, label_batch = tf.train.shuffle_batch(
+        [image, label],
+        batch_size=batch_size,
+        num_threads=num_preprocess_threads,
+        capacity=min_queue_examples + 3 * batch_size,
+        min_after_dequeue=min_queue_examples)
+  else:
+    images, label_batch = tf.train.batch(
+        [image, label],
+        batch_size=batch_size,
+        num_threads=num_preprocess_threads,
+        capacity=min_queue_examples + 3 * batch_size)
+
+  # Display the training images in the visualizer.
+  tf.image_summary('images', images)
+
+  return images, tf.reshape(label_batch, [batch_size])		
 
     def get_test_batch(self):
         x_batch = np.zeros((len(self.test_batch), self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
@@ -71,7 +92,9 @@ class DataLoader(object):
         print "Batch loaded in parallel ", (time.time() - lt)
 
     def _load_paths_and_threshold(self, use_imagenet):
-        '''Loads all the paths and removes those below the saturation threshold.'''
+        '''Loads all the paths and removes those below the saturation threshold.
+	Does not return anything. Populates self.all_paths and self.test_batch
+	'''
         source = 'imagenet_train_256_saturation_values.json.gz' if use_imagenet else 'places_2_256_training_saturation_index.json.gz'
         f = ujson.load(gzip.open('../dataset_indexes/' + source, 'rt'))
         self.all_paths = [path for path in f.keys() if f[path] > self.SATURATION_THRESHOLD]
