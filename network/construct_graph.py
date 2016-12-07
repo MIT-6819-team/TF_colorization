@@ -143,7 +143,7 @@ def loss_function(output, output_):
   return tf.reduce_mean(loss)
 
 def weighted_loss_function(output, output_):
-    quantized_frequencies = np.load('../preprocessing/quantized_counts.npy')
+    quantized_frequencies = np.load('../preprocessing/reweighting_vector.npy')
 
     loss = tf.nn.softmax_cross_entropy_with_logits( output,  output_ )
     return tf.reduce_mean(loss)
