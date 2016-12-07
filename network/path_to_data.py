@@ -78,4 +78,4 @@ def _distance_of_indicies(i, j):
     b = quantized_regions[j]
     return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
-compute_counts()
+#compute_counts()
