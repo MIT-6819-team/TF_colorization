@@ -8,18 +8,18 @@ import time
 
 RESTORE_FROM_X_ITERATIONS = 61000
 
-def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999):
+def run_training(BATCH_SIZE = 16, ITERATIONS = 99999999999):
   f = open('log.txt', 'w')
 
   with tf.Session() as sess:
-    x, y_, y_output = construct_graph.setup_tensorflow_graph(BATCH_SIZE)
 
     print "Setup dataloader"
     saver = tf.train.Saver()
-    dataset = DataLoader(BATCH_SIZE)
+    data_x, data_y = DataLoader(BATCH_SIZE)
 
     print "Setup graph"
-    loss = construct_graph.loss_function(y_output, y_)
+    y_output = construct_graph.setup_tensorflow_graph(data_x, BATCH_SIZE)
+    loss = construct_graph.loss_function(y_output, data_y)
     prediction = construct_graph.get_prediction(y_output)
     train_step = tf.train.AdamOptimizer(1e-4).minimize(loss)
  
@@ -34,10 +34,10 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999):
     for i in xrange(ITERATIONS):
       lt = time.time()
 
-      data_x, data_y_ = dataset.next_batch()
+      #data_x, data_y_ = dataset.next_batch()
 
       lt2 = time.time()
-      _, loss_res = sess.run([train_step, loss], feed_dict={x: data_x, y_: data_y_})
+      _, loss_res = sess.run([train_step, loss])
       lt3 = time.time()
 
       if i % 1000 == 0 and i != 0:
