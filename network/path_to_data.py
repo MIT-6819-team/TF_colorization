@@ -22,7 +22,7 @@ def image_path_to_image_and_distribution_tensor(path):
         for y in xrange(h):
             ab = tuple(np.floor(img[4 * x][4 * y]))
             dist[x][y] = _map_ab_to_distribution(ab)
-            weights[x][y] = ab_to_closest_bucket[ab]
+            weights[x][y] = reweighting_vector[ab_to_closest_bucket[ab]]
 
     return lab_img[:, :, 0], dist, weights
 
