@@ -58,7 +58,7 @@ class DataLoader(object):
         lt = time.time()
         x_batch = np.zeros((self.batch_size, self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
         y__batch = np.zeros((self.batch_size, self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
-        y_reweight_batch = np.zeros((self.batch_size, self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 1))
+        y_reweight_batch = np.zeros((self.batch_size, self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE))
 
         for i in range(self.batch_size):
           path = self.all_paths[int(random.random() * len(self.all_paths))]
