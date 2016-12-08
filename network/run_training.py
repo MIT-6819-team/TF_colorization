@@ -53,7 +53,7 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL =
         _colorize_and_save_test_images(sess, dataset, prediction, (i)/1000, x, REWEIGHT_COLOR_CLASSES)
         saver.save( sess, model_name)
         with open(logfile_name, 'a') as f:
-            f.write(str(i))
+            f.write(str(i)+'\n')
 
       print "Iteration ", i, "Data loading: ", (lt2 - lt), "Backprop: ", (lt3 - lt2), "Full", (time.time() - lt), "Accuracy:", loss_res
 
