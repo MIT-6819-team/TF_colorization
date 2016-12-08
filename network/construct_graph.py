@@ -4,6 +4,7 @@ def setup_tensorflow_graph(BATCH_SIZE):
 
   image_ = tf.placeholder( tf.float32, shape = [None, 256, 256, 1] )
   output_ = tf.placeholder( tf.float32, shape = [None, 64, 64, 313])
+  rebalance_ = tf.placeholder(tf.float32, shape = [None, 64, 64])
 
   W1_1 = weight_variable([3,3,1,64])
   b1_1 = bias_variable([64])
@@ -136,17 +137,15 @@ def setup_tensorflow_graph(BATCH_SIZE):
   conv_ab = conv2d( conv8_3, W_ab, 1 ) + b_ab
   output = tf.nn.relu(conv_ab)
 
-  return image_, output_, output
+  return image_, output_, output, rebalance_
 
 def loss_function(output, output_):
   loss = tf.nn.softmax_cross_entropy_with_logits( output,  output_ )
   return tf.reduce_mean(loss)
 
-def weighted_loss_function(output, output_):
-    quantized_frequencies = np.load('../preprocessing/reweighting_vector.npy')
-
+def weighted_loss_function(output, output_, rebalance_):
     loss = tf.nn.softmax_cross_entropy_with_logits( output,  output_ )
-    return tf.reduce_mean(loss)
+    return tf.reduce_mean(loss * rebalance_)
 
 def get_prediction( output ):
   prediction = tf.nn.softmax( output )

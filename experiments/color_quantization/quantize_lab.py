@@ -44,16 +44,16 @@ def construct_quantization_from_lab():
                 lab = [l, a, b]
                 pixel = np.array(lab_color_to_single_pixel_image(lab))
                 rgb = lab_to_rgb(pixel)
-                recover_lab = rgb_to_lab(rgb)[0][0]          
+                recover_lab = rgb_to_lab(rgb)[0][0]
 
                 if approx_equal(recover_lab[0], l) and approx_equal(recover_lab[1], a) and approx_equal(recover_lab[2], b):
                     rgb = rgb[0][0]
                     bgr = (rgb[2], rgb[1], rgb[0])
                     # viz[SIZE + int(a/QUANTIZE_SIZE)*QUANTIZE_SIZE][SIZE + int(b/QUANTIZE_SIZE)*QUANTIZE_SIZE] = bgr
-                    # This Lab value is in the RGB colorspace                
+                    # This Lab value is in the RGB colorspace
                     quantized_lab = (int(a/QUANTIZE_SIZE), int(b/QUANTIZE_SIZE))
                     if quantized_lab not in colorspace:
-                        cv2.rectangle(viz, (SIZE + int(b/QUANTIZE_SIZE)*QUANTIZE_SIZE, SIZE + int(a/QUANTIZE_SIZE)*QUANTIZE_SIZE), 
+                        cv2.rectangle(viz, (SIZE + int(b/QUANTIZE_SIZE)*QUANTIZE_SIZE, SIZE + int(a/QUANTIZE_SIZE)*QUANTIZE_SIZE),
                         (SIZE + (int(b/QUANTIZE_SIZE) +1)*QUANTIZE_SIZE, SIZE + (int(a/QUANTIZE_SIZE)+1)*QUANTIZE_SIZE),
                         bgr, -1)
                         colorspace[quantized_lab] = rgb
@@ -65,7 +65,7 @@ def construct_quantization_from_lab():
     return colorspace
 
 def construct_quantization_layer():
-    
+
 
 def approx_equal(x, y, threshold = 0.5):
     return abs(x - y) < threshold

@@ -5,7 +5,8 @@ from skimage import color, io
 import time
 
 ab_to_dist = {}
-
+ab_to_closest_bucket = {}
+reweighting_vector = np.load('../preprocessing/reweighting_vector.npy')
 
 def image_path_to_image_and_distribution_tensor(path):
     '''Converts an image path to a LAB image and a [64, 64, 313] tensor of color distribution values.'''
@@ -14,13 +15,16 @@ def image_path_to_image_and_distribution_tensor(path):
 
     img = lab_img[:, :, 1:3]
     dist = np.zeros([64, 64, 313])
+    weights = np.zeros([64, 64])
 
     h, w, _ = dist.shape
     for x in xrange(w):
         for y in xrange(h):
-            dist[x][y] = _map_ab_to_distribution(tuple(np.floor(img[4 * x][4 * y])))
+            ab = tuple(np.floor(img[4 * x][4 * y]))
+            dist[x][y] = _map_ab_to_distribution(ab)
+            weights[x][y] = ab_to_closest_bucket[ab]
 
-    return lab_img[:, :, 0], dist
+    return lab_img[:, :, 0], dist, weights
 
 
 def _gaussian(x, var):
@@ -50,6 +54,7 @@ def _precompute_distributions():
             dist = gaussian_distances / np.sum(gaussian_distances)
 
             ab_to_dist[(a, b)] = dist
+            ab_to_closest_bucket[(a, b)] = np.argmin(distances)
     print "Done"
 
 

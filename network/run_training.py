@@ -6,43 +6,49 @@ import warnings
 warnings.filterwarnings('ignore')
 import time
 
-RESTORE_FROM_X_ITERATIONS = 61000
-
-def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999):
-  f = open('log.txt', 'w')
+def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL = True, REWEIGHT_COLOR_CLASSES = False):
+  f = open('iterations_log.txt', 'w')
 
   with tf.Session() as sess:
-    x, y_, y_output = construct_graph.setup_tensorflow_graph(BATCH_SIZE)
+    x, y_, y_output, rebalance_ = construct_graph.setup_tensorflow_graph(BATCH_SIZE)
 
     print "Setup dataloader"
     saver = tf.train.Saver()
     dataset = DataLoader(BATCH_SIZE)
 
     print "Setup graph"
-    loss = construct_graph.loss_function(y_output, y_)
+    if REWEIGHT_COLOR_CLASSES:
+        loss = construct_graph.weighted_loss_function(y_output, y_, rebalance_)
+    else:
+        loss = construct_graph.loss_function(y_output, y_)
+
     prediction = construct_graph.get_prediction(y_output)
     train_step = tf.train.AdamOptimizer(1e-4).minimize(loss)
- 
+
     sess.run(tf.initialize_all_variables())
-    if RESTORE_FROM_X_ITERATIONS:
+    starting_iterations = 0
+    if RESTORE_FROM_MODEL:
         print "Restoring model."
         saver.restore(sess, "model/model")
+        starting_iterations = int(fh.readlines()[-1].rstrip('\n'))
+        print "Starting from iteration", starting_iterations
     else:
         print "Starting model from scratch."
 
-
-    for i in xrange(ITERATIONS):
+    for i in xrange(starting_iterations, ITERATIONS):
       lt = time.time()
 
-      data_x, data_y_ = dataset.next_batch()
+      data_x, data_y_, data_y_rebalance = dataset.next_batch()
 
       lt2 = time.time()
-      _, loss_res = sess.run([train_step, loss], feed_dict={x: data_x, y_: data_y_})
+      _, loss_res = sess.run([train_step, loss], feed_dict={x: data_x, y_: data_y_, rebalance_: data_y_rebalance})
       lt3 = time.time()
 
       if i % 1000 == 0 and i != 0:
-        _colorize_and_save_test_images(sess, dataset, prediction, (i + RESTORE_FROM_X_ITERATIONS)/1000, x)
+        _colorize_and_save_test_images(sess, dataset, prediction, (i + starting_location_iterations)/1000, x)
         saver.save( sess, 'model/model')
+        f.write(i)
+        f.flush()
 
       print "Iteration ", i, "Data loading: ", (lt2 - lt), "Backprop: ", (lt3 - lt2), "Full", (time.time() - lt), "Accuracy:", loss_res
 

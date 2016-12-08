@@ -15,7 +15,6 @@ class DataLoader(object):
     def __init__(self, batch_size, use_imagenet=True, use_winter=True):
         self.batch_size = batch_size
         self._load_paths_and_threshold(use_imagenet)
-        self.current_datapoint_index = 0
 
         self.training_batches = []
         self.batches_available = threading.Semaphore(0)
@@ -36,10 +35,10 @@ class DataLoader(object):
           threading.Thread(target = self._load_batch).start()
 
         self.batches_available.acquire()  # Wait for a new batch
-        data_x, data_y_ = self.training_batches[0]
+        data_x, data_y_, data_y_rebalance = self.training_batches[0]
         del self.training_batches[0]
 
-        return data_x, data_y_
+        return data_x, data_y_, data_y_rebalance
 
     def get_test_batch(self):
         x_batch = np.zeros((len(self.test_batch), self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
@@ -47,7 +46,7 @@ class DataLoader(object):
 
         for i in range(len(self.test_batch)):
             path = self.test_batch[i]
-            x, y_ = image_path_to_image_and_distribution_tensor(self.root + path)
+            x, y_, _ = image_path_to_image_and_distribution_tensor(self.root + path)
 
             x_batch[i, ...] = x.reshape((256, 256, 1))
             y__batch[i, ...] = y_
@@ -59,19 +58,17 @@ class DataLoader(object):
         lt = time.time()
         x_batch = np.zeros((self.batch_size, self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
         y__batch = np.zeros((self.batch_size, self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
+        y_reweight_batch = np.zeros((self.batch_size, self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 1))
 
         for i in range(self.batch_size):
-          path = self.all_paths[self.current_datapoint_index]
-          x, y_ = image_path_to_image_and_distribution_tensor(self.root + path)
+          path = self.all_paths[int(random.random() * len(self.all_paths))]
+          x, y_, y_reweight = image_path_to_image_and_distribution_tensor(self.root + path)
 
           x_batch[i, ...] = x.reshape((256, 256, 1))
           y__batch[i, ...] = y_
+          y_reweight_batch[i, ...] = y_reweight
 
-          self.current_datapoint_index += 1
-          if self.current_datapoint_index >= len(self.all_paths):
-              self.current_datapoint_index = 0
-
-        self.training_batches.append((x_batch, y__batch))
+        self.training_batches.append((x_batch, y__batch, y_reweight_batch))
         self.batches_available.release()
         print "Batch loaded in parallel ", (time.time() - lt)
 
