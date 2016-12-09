@@ -6,7 +6,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import time
 
-def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL = True, REWEIGHT_COLOR_CLASSES = False):
+def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL = True, REWEIGHT_COLOR_CLASSES = True):
   print "Run training! Reweight: ", REWEIGHT_COLOR_CLASSES, " Batch Size: ", BATCH_SIZE
 
   with tf.Session() as sess:
@@ -38,7 +38,6 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL =
         print "Starting from iteration", starting_iterations
     else:
         print "Starting model from scratch."
-        thread.sleep(3)
 
     for i in xrange(starting_iterations, ITERATIONS):
       lt = time.time()
