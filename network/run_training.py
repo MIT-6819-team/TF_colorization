@@ -63,7 +63,7 @@ def _colorize_and_save_test_images(sess, dataset, prediction, iteration, x, REWE
   test_image_predictions = sess.run( prediction,  feed_dict = {x: test_image_batch} )
   for i in range(test_image_batch.shape[0]):
       image_folder = 'reweight_images/' if REWEIGHT_COLOR_CLASSES else 'images/'
-      get_colorized_image(test_image_batch[i], test_image_predictions[i]).save(image_folder + str(i) + '_' + str(iteration) + '.jpg')
-      get_colorized_image(test_image_batch[i], test_image_predictions[i], True).save(image_folder + str(i) + '_' + str(iteration) + '_custom.jpg')
+      get_colorized_image(test_image_batch[i], test_image_predictions[i], True).save(image_folder + str(i) + '_' + str(iteration) + '.jpg')
+      get_colorized_image(test_image_batch[i], test_image_predictions[i], False).save(image_folder + str(i) + '_' + str(iteration) + '_custom.jpg')
 
 run_training()
