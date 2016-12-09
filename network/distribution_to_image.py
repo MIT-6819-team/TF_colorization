@@ -4,8 +4,6 @@ from skimage import color
 from colormath.color_objects import LabColor, sRGBColor
 from colormath.color_conversions import convert_color
 import time
-from joblib import Parallel, delayed
-
 
 quantized_array = np.load('pts_in_hull.npy')
 
@@ -33,11 +31,13 @@ def _lab_to_rgb(lab_image):
     print "start lab to rgb"
     lt = time.time()
     rgb_image = np.zeros([256, 256, 3])
-    Parallel(n_jobs=-1)(delayed(_color_pixel)(x,y, lab_image, rgb_image) for x in xrange(256) for y in xrange(256))
-    print "end", (time.time() - lt)
-    return rgb_image
 
-def _color_pixel(x, y, lab_image, rgb_image)
-    lab = lab_image[x][y]
-    rgb = convert_color(LabColor(*lab), sRGBColor)
-    rgb_image[x][y] = np.array([rgb.clamped_rgb_r, rgb.clamped_rgb_g, rgb.clamped_rgb_b])
+    for x in xrange(256):
+        for y in xrange(256):
+            lab = lab_image[x][y]
+            rgb = convert_color(LabColor(*lab), sRGBColor)
+            rgb_image[x][y] = np.array([rgb.clamped_rgb_r, rgb.clamped_rgb_g, rgb.clamped_rgb_b])
+
+    print "end", (time.time() - lt)
+
+    return rgb_image
