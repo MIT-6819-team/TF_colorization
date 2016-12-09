@@ -3,10 +3,12 @@ from PIL import Image
 from skimage import color
 from colormath.color_objects import LabColor, sRGBColor
 from colormath.color_conversions import convert_color
+import time
 
 quantized_array = np.load('pts_in_hull.npy')
 
-def get_colorized_image( image, prediction ,use_skiimage_conversion=True):
+def get_colorized_image( image, prediction ,use_skiimage_conversion=False):
+    print "Get colorized image", use_skiimage_conversion
     T = 0.38
     epsilon = 1e-8
 
@@ -21,17 +23,21 @@ def get_colorized_image( image, prediction ,use_skiimage_conversion=True):
     if use_skiimage_conversion:
         rgb_image = 255 * color.lab2rgb(colorized_image)
     else:
-        rgb_image = _lab_to_rgb(colorized_image)
+        rgb_image = 255 * _lab_to_rgb(colorized_image)
 
     return Image.fromarray(rgb_image.astype(np.uint8) )
 
 def _lab_to_rgb(lab_image):
-    rgb_image = np.zeros([256, 256])
+    print "start lab to rgb"
+    lt = time.time()
+    rgb_image = np.zeros([256, 256, 3])
 
     for x in xrange(256):
         for y in xrange(256):
-            lab = img[x][y]
+            lab = lab_image[x][y]
             rgb = convert_color(LabColor(*lab), sRGBColor)
-            rgb_image[x][y] = rgb
+            rgb_image[x][y] = np.array([rgb.clamped_rgb_r, rgb.clamped_rgb_g, rgb.clamped_rgb_b])
+
+    print "end", (time.time() - lt)
 
     return rgb_image

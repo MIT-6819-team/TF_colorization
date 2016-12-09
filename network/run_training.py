@@ -49,6 +49,7 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL =
       lt3 = time.time()
 
       if i % 1000 == 0:
+        print "Generated colorized images."
         _colorize_and_save_test_images(sess, dataset, prediction, (i)/1000, x, REWEIGHT_COLOR_CLASSES)
         saver.save( sess, model_name)
         with open(logfile_name, 'a') as f:
@@ -63,6 +64,6 @@ def _colorize_and_save_test_images(sess, dataset, prediction, iteration, x, REWE
   for i in range(test_image_batch.shape[0]):
       image_folder = 'reweight_images/' if REWEIGHT_COLOR_CLASSES else 'images/'
       get_colorized_image(test_image_batch[i], test_image_predictions[i]).save(image_folder + str(i) + '_' + str(iteration) + '.jpg')
-      get_colorized_image(test_image_batch[i], test_image_predictions[i]).save(image_folder + str(i) + '_' + str(iteration) + '_custom.jpg')
+      get_colorized_image(test_image_batch[i], test_image_predictions[i], True).save(image_folder + str(i) + '_' + str(iteration) + '_custom.jpg')
 
 run_training()
