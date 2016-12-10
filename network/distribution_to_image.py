@@ -28,15 +28,16 @@ def get_colorized_image( image, prediction ,use_skiimage_conversion=False):
     return Image.fromarray(rgb_image.astype(np.uint8) )
 
 def _lab_to_rgb(lab_image):
-    print "start lab to rgb"
+    print "Start lab to rgb. This may take a while."
     lt = time.time()
     rgb_image = np.zeros([256, 256, 3])
 
-    for x in xrange(256):
-        for y in xrange(256):
-            lab = lab_image[x][y]
-            rgb = convert_color(LabColor(*lab), sRGBColor)
-            rgb_image[x][y] = np.array([rgb.clamped_rgb_r, rgb.clamped_rgb_g, rgb.clamped_rgb_b])
+    for i in xrange(256**2):
+        x = i/256
+        y = i%256
+        lab = lab_image[x][y]
+        rgb = convert_color(LabColor(*lab), sRGBColor)
+        rgb_image[x][y] = np.array([rgb.clamped_rgb_r, rgb.clamped_rgb_g, rgb.clamped_rgb_b])
 
     print "end", (time.time() - lt)
 

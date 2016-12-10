@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import tensorflow as tf
 import construct_graph
 from dataloader import DataLoader
@@ -5,6 +6,7 @@ from distribution_to_image import get_colorized_image
 import warnings
 warnings.filterwarnings('ignore')
 import time
+from joblib import Parallel, delayed
 
 def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL = True, REWEIGHT_COLOR_CLASSES = True):
   print "Run training! Reweight: ", REWEIGHT_COLOR_CLASSES, " Batch Size: ", BATCH_SIZE
@@ -31,11 +33,14 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL =
     sess.run(tf.initialize_all_variables())
     starting_iterations = 0
     if RESTORE_FROM_MODEL:
-        print "Restoring model."
-        saver.restore(sess, model_name)
-        with open(logfile_name, 'r') as f:
-            starting_iterations = int(f.readlines()[-1].rstrip('\n'))
-        print "Starting from iteration", starting_iterations
+        print "Trying to restore model."
+        try:
+            saver.restore(sess, model_name)
+            with open(logfile_name, 'r') as f:
+                starting_iterations = int(f.readlines()[-1].rstrip('\n'))
+            print "Starting from iteration", starting_iterations
+        except:
+            print "ERROR loading model. Ignoring and starting model from scratch."
     else:
         print "Starting model from scratch."
 
@@ -56,14 +61,16 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL =
             f.write(str(i)+'\n')
 
       print "Iteration ", i, "Data loading: ", (lt2 - lt), "Backprop: ", (lt3 - lt2), "Full", (time.time() - lt), "Accuracy:", loss_res
+    
+def workerfunc(test_im, test_im_predictions, x, itr, folder):
+    return get_colorized_image(test_im, test_im_predictions, False).save(folder + str(x) + '_' + str(itr) + '.jpg')
 
 
 def _colorize_and_save_test_images(sess, dataset, prediction, iteration, x, REWEIGHT_COLOR_CLASSES):
   test_image_batch, _ = dataset.get_test_batch()
   test_image_predictions = sess.run( prediction,  feed_dict = {x: test_image_batch} )
-  for i in range(test_image_batch.shape[0]):
-      image_folder = 'reweight_images/' if REWEIGHT_COLOR_CLASSES else 'images/'
-      get_colorized_image(test_image_batch[i], test_image_predictions[i], True).save(image_folder + str(i) + '_' + str(iteration) + '.jpg')
-      get_colorized_image(test_image_batch[i], test_image_predictions[i], False).save(image_folder + str(i) + '_' + str(iteration) + '_custom.jpg')
+  image_folder = 'reweight_images/' if REWEIGHT_COLOR_CLASSES else 'images/'
+    
+  Parallel(n_jobs=4)(delayed(workerfunc)(test_image_batch[i], test_image_predictions[i], i, iteration,image_folder) for i in xrange(test_image_batch.shape[0]))
 
 run_training()
