@@ -53,6 +53,19 @@ class DataLoader(object):
 
         return x_batch, y__batch
 
+    def get_validation_batch(self):
+        x_batch = np.zeros((len(self.validation_paths), self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
+        y__batch = np.zeros((len(self.validation_paths), self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
+
+        for i in range(len(self.validation_paths)):
+            path = self.test_batch[i]
+            x, y_, _ = image_path_to_image_and_distribution_tensor(self.root + path)
+
+            x_batch[i, ...] = x.reshape((256, 256, 1))
+            y__batch[i, ...] = y_
+
+        return x_batch, y__batch
+
     def _load_batch(self):
         """Load the next batch, queue it, and increase the semaphore."""
         lt = time.time()
@@ -79,3 +92,8 @@ class DataLoader(object):
         self.all_paths = [path for path in f.keys() if f[path] > self.SATURATION_THRESHOLD]
 
         self.test_batch = self.all_paths[:self.batch_size]
+
+        validation_source = 'imagenet_validation_256_saturation_values.json.gz' if use_imagenet else 'places_2_256_validation_saturation_index.json.gz'
+        vf = ujson.load(gzip.open('../dataset_indexes/' + validation_source, 'rt'))
+
+        self.validation_paths = [path for path in vf.keys() if vf[path] > self.SATURATION_THRESHOLD]
