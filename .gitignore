@@ -4,6 +4,9 @@ network/model*
 network/images*
 network/log*
 
+# Ignore images. They have too high turnover.
+*.jpeg
+*.jpg
 
 
 # Default python ignores

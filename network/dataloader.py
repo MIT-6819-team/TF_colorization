@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import ujson
 import gzip
 import numpy as np
@@ -22,7 +23,7 @@ class DataLoader(object):
 
     	if use_imagenet:
             if use_winter:
-    	        self.root = '/root/persistant_data/datasets/imagenet/train256/'
+    	        self.root = '../../datasets/imagenet/train256/'
             else:
                 self.root = '/data/vision/torralba/yusuf/imagenet/data/images/train256/'
     	else:
