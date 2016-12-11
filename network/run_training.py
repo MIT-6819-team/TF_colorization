@@ -27,6 +27,8 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL =
     # Ensure that the directory we want to save our stuff in exists.
     if not os.path.exists("tests/{}".format(TEST_NAME)):
         os.makedirs("tests/{}".format(TEST_NAME))
+        os.makedirs("tests/{}/model/".format(TEST_NAME))
+        os.makedirs("tests/{}/images/".format(TEST_NAME))
     
 
     loss = construct_graph.weighted_loss_function(y_output, y_, rebalance_) if REWEIGHT_COLOR_CLASSES else construct_graph.loss_function(y_output, y_)
