@@ -23,6 +23,7 @@ class DataLoader(object):
     	if use_imagenet:
             if use_winter:
     	        self.root = '/root/persistant_data/datasets/imagenet/train256/'
+		self.validation_root = '/root/persistant_data/datasets/imagenet/val256/'
             else:
                 self.root = '/data/vision/torralba/yusuf/imagenet/data/images/train256/'
     	else:
@@ -59,8 +60,8 @@ class DataLoader(object):
         gt_batch = np.zeros((len(self.validation_paths), self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 3))
 
         for i in range(len(self.validation_paths)):
-            path = self.test_batch[i]
-            x, y_, _, ground_truth= image_path_to_image_and_distribution_tensor(self.root + path)
+            path = self.validation_paths[i]
+            x, y_, _, ground_truth= image_path_to_image_and_distribution_tensor(self.validation_root + path)
 
             x_batch[i, ...] = x.reshape((256, 256, 1))
             y__batch[i, ...] = y_
