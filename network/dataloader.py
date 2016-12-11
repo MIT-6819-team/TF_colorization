@@ -12,8 +12,9 @@ class DataLoader(object):
     OUTPUT_IMAGE_SIZE = 64
     INPUT_IMAGE_SIZE = 256
 
-    def __init__(self, batch_size, use_imagenet=True, use_winter=True):
+    def __init__(self, batch_size, use_imagenet=True, use_winter=True, constrain_batches_to_categories=True):
         self.batch_size = batch_size
+        self.constrain_batches_to_categories = constrain_batches_to_categories
         self._load_paths_and_threshold(use_imagenet)
 
         self.training_batches = []
@@ -75,9 +76,14 @@ class DataLoader(object):
         x_batch = np.zeros((self.batch_size, self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
         y__batch = np.zeros((self.batch_size, self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
         y_reweight_batch = np.zeros((self.batch_size, self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE))
-
+        
+        # Randomly pick the file to use in the batch.
+        
+        batch_category = self.categories[int(random.random() * len(self.categories))] if self.constrain_batches_to_categories else None
+        available_paths = self.category_index[batch_category] if self.constrain_batches_to_categories else self.all_paths
+        
         for i in range(self.batch_size):
-          path = self.all_paths[int(random.random() * len(self.all_paths))]
+          path = available_paths[int(random.random() * len(available_paths))]
           x, y_, y_reweight, _ = image_path_to_image_and_distribution_tensor(self.root + path)
 
           x_batch[i, ...] = x.reshape((256, 256, 1))
@@ -100,3 +106,8 @@ class DataLoader(object):
         vf = ujson.load(open('../dataset_indexes/' + validation_source, 'rt'))
 
         self.validation_paths = [path for path in vf.keys() if vf[path] > self.SATURATION_THRESHOLD]
+        
+        # Load in category information if needed
+        if self.constrain_batches_to_categories:
+            self.category_index = ujson.load(gzip.open('../dataset_indexes/imagenet_train_256_category_paths.json.gz', 'rt'))
+            self.categories = self.category_index.keys()
