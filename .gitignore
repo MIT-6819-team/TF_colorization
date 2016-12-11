@@ -3,7 +3,7 @@ experiments/enes/model*
 network/model*
 network/images*
 network/log*
-
+network/tests
 
 # Ignore temp files
 *.save

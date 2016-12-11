@@ -8,18 +8,18 @@ warnings.filterwarnings('ignore')
 import time, os
 from joblib import Parallel, delayed
 
-TEST_NAME = "random_batching"
-CONSTRAIN_BATCHING = False
+TEST_NAME = "probablistic_reweighted_batching"
+BATCHING_STYLE = "probablistic"
 
 def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL = True, REWEIGHT_COLOR_CLASSES = True):
-  print "Run training for test '{}'! Reweight: {} Batch Size: {} ".format(TEST_NAME, REWEIGHT_COLOR_CLASSES, BATCH_SIZE)
+  print "Run training for test '{}' using batch style {}. Reweight: {} Batch Size: {}.".format(TEST_NAME, BATCHING_STYLE, REWEIGHT_COLOR_CLASSES, BATCH_SIZE)
 
   with tf.Session() as sess:
     x, y_, y_output, rebalance_ = construct_graph.setup_tensorflow_graph(BATCH_SIZE)
 
     print "Setup dataloader"
     saver = tf.train.Saver()
-    dataset = DataLoader(BATCH_SIZE, constrain_batches_to_categories=CONSTRAIN_BATCHING)
+    dataset = DataLoader(BATCH_SIZE, batching_style=BATCHING_STYLE)
 
     print "Setup graph"
     logfile_name = 'tests/{}/iterations_log.txt'.format(TEST_NAME)

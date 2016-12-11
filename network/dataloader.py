@@ -11,25 +11,33 @@ class DataLoader(object):
     SATURATION_THRESHOLD = 0.1
     OUTPUT_IMAGE_SIZE = 64
     INPUT_IMAGE_SIZE = 256
+    TRAIN_SOURCE = '../dataset_indexes/imagenet_train_256_saturation_values.json.gz'
+    VALIDATION_SOURCE = '../dataset_indexes/imagenet_human_validation_set.json'
+    CATEGORY_SOURCE = '../dataset_indexes/imagenet_train_256_category_paths_reweighted.json.gz'
 
-    def __init__(self, batch_size, use_imagenet=True, use_winter=True, constrain_batches_to_categories=True):
+    def __init__(self, batch_size, use_imagenet=True, batching_style="probablistic"):
         self.batch_size = batch_size
-        self.constrain_batches_to_categories = constrain_batches_to_categories
+        self.batching_style = batching_style
         self._load_paths_and_threshold(use_imagenet)
 
         self.training_batches = []
         self.batches_available = threading.Semaphore(0)
         self.DESIRED_QUEUED_BATCHES = 3
 
-    	if use_imagenet:
-            if use_winter:
-    	        self.root = '../../datasets/imagenet/train256/'
-		self.validation_root = '../../datasets/imagenet/val256/'
-            else:
-                self.root = '/data/vision/torralba/yusuf/imagenet/data/images/train256/'
-    	else:
-    	    print "Don't know places root"
-
+    	if use_imagenet:    
+            self.root = '../../datasets/imagenet/train256/'
+            self.validation_root = '../../datasets/imagenet/val256/'
+        else:
+    	    print "Don't know where the places_2 root is!"
+            raise
+            
+    def get_filenames_for_batch(self):
+        '''
+        Returns a list of filenames. Uses value from self.batching_style.
+        '''
+        
+        
+        
     def next_batch(self):
         """Gets the next batch from the dataset and starts loading others in parallel."""
         # Make sure that we always have enough batches precomputed
@@ -41,19 +49,6 @@ class DataLoader(object):
         del self.training_batches[0]
 
         return data_x, data_y_, data_y_rebalance
-
-    def get_test_batch(self):
-        x_batch = np.zeros((len(self.test_batch), self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
-        y__batch = np.zeros((len(self.test_batch), self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
-
-        for i in range(len(self.test_batch)):
-            path = self.test_batch[i]
-            x, y_, _, _ = image_path_to_image_and_distribution_tensor(self.root + path)
-
-            x_batch[i, ...] = x.reshape((256, 256, 1))
-            y__batch[i, ...] = y_
-
-        return x_batch, y__batch
 
     def get_validation_batch(self):
         x_batch = np.zeros((len(self.validation_paths), self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
@@ -77,13 +72,9 @@ class DataLoader(object):
         y__batch = np.zeros((self.batch_size, self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
         y_reweight_batch = np.zeros((self.batch_size, self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE))
         
-        # Randomly pick the file to use in the batch.
+        paths = self.get_filenames_for_batch()
         
-        batch_category = self.categories[int(random.random() * len(self.categories))] if self.constrain_batches_to_categories else None
-        available_paths = self.category_index[batch_category] if self.constrain_batches_to_categories else self.all_paths
-        
-        for i in range(self.batch_size):
-          path = available_paths[int(random.random() * len(available_paths))]
+        for path in paths:
           x, y_, y_reweight, _ = image_path_to_image_and_distribution_tensor(self.root + path)
 
           x_batch[i, ...] = x.reshape((256, 256, 1))
@@ -96,20 +87,13 @@ class DataLoader(object):
 
     def _load_paths_and_threshold(self, use_imagenet):
         '''Loads all the paths and removes those below the saturation threshold.'''
-        source = 'imagenet_train_256_saturation_values.json.gz' if use_imagenet else 'places_2_256_training_saturation_index.json.gz'
-        f = ujson.load(gzip.open('../dataset_indexes/' + source, 'rt'))
-        self.all_paths = [path for path in f.keys() if f[path] > self.SATURATION_THRESHOLD]
         
-        # Get test batch
-        f = ujson.load(open('../dataset_indexes/imagenet_human_validation_set.json', 'rt'))
-        self.test_batch = f.keys()
+        f = ujson.load(gzip.open(TRAIN_SOURCE, 'rt'))
+        self.all_paths = [path for path in f.keys() if f[path] > self.SATURATION_THRESHOLD]
 
-        validation_source = 'imagenet_human_validation_set.json' if use_imagenet else 'no validation'
-        vf = ujson.load(open('../dataset_indexes/' + validation_source, 'rt'))
-
+        vf = ujson.load(open(VALIDATION_SOURCE, 'rt'))
         self.validation_paths = [path for path in vf.keys() if vf[path] > self.SATURATION_THRESHOLD]
         
-        # Load in category information if needed
-        if self.constrain_batches_to_categories:
-            self.category_index = ujson.load(gzip.open('../dataset_indexes/imagenet_train_256_category_paths.json.gz', 'rt'))
-            self.categories = self.category_index.keys()
+
+        self.category_index = ujson.load(gzip.open(CATEGORY_SOURCE, 'rt'))
+        self.categories = self.category_index.keys()
