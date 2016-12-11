@@ -23,8 +23,8 @@ class DataLoader(object):
 
     	if use_imagenet:
             if use_winter:
-    	        self.root = '/root/persistant_data/datasets/imagenet/train256/'
-		self.validation_root = '/root/persistant_data/datasets/imagenet/val256/'
+    	        self.root = '../../datasets/imagenet/train256/'
+		self.validation_root = '../../datasets/imagenet/val256/'
             else:
                 self.root = '/data/vision/torralba/yusuf/imagenet/data/images/train256/'
     	else:
@@ -99,8 +99,10 @@ class DataLoader(object):
         source = 'imagenet_train_256_saturation_values.json.gz' if use_imagenet else 'places_2_256_training_saturation_index.json.gz'
         f = ujson.load(gzip.open('../dataset_indexes/' + source, 'rt'))
         self.all_paths = [path for path in f.keys() if f[path] > self.SATURATION_THRESHOLD]
-
-        self.test_batch = self.all_paths[:self.batch_size]
+        
+        # Get test batch
+        f = ujson.load(open('../dataset_indexes/imagenet_human_validation_set.json', 'rt'))
+        self.test_batch = f.keys()
 
         validation_source = 'imagenet_human_validation_set.json' if use_imagenet else 'no validation'
         vf = ujson.load(open('../dataset_indexes/' + validation_source, 'rt'))

@@ -39,10 +39,10 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL =
     if RESTORE_FROM_MODEL:
         print "Trying to restore model."
         try:
-            saver.restore(sess, model_name)
             with open(logfile_name, 'r') as f:
                 starting_iterations = int(f.readlines()[-1].rstrip('\n'))
-            print "Starting from iteration", starting_iterations
+            print "Restoring model from iteration", starting_iterations
+            saver.restore(sess, "{}_step_".format(model_name, starting_iterations))
         except:
             print "ERROR loading model. Ignoring and starting model from scratch."
     else:
@@ -58,9 +58,10 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL =
       lt3 = time.time()
 
       if i % 1000 == 0 and i != 0:
-        print "Generated colorized images."
+        print "Generating images of hold out set."
         _colorize_and_save_test_images(sess, dataset, prediction, (i)/1000, x, REWEIGHT_COLOR_CLASSES)
-        saver.save( sess, model_name)
+        print "Saving the model."
+        saver.save( sess, "{}_step_{}".format(model_name,i))
         with open(logfile_name, 'a') as f:
             f.write(str(i)+'\n')
 
