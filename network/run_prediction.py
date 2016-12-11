@@ -5,6 +5,10 @@ from distribution_to_image import get_colorized_image
 import warnings
 warnings.filterwarnings('ignore')
 import time
+from joblib import Parallel, delayed
+from PIL import Image
+import numpy as np
+
 
 def run_prediction(REWEIGHT_COLOR_CLASSES = True):
     BATCH_SIZE = 20
@@ -33,16 +37,18 @@ def run_prediction(REWEIGHT_COLOR_CLASSES = True):
 
         print "Running validation set through model"
 
-        _colorize_and_save_test_images(sess, dataset, prediction, (i)/1000, x, REWEIGHT_COLOR_CLASSES)
+        _colorize_and_save_test_images(sess, dataset, prediction, x, REWEIGHT_COLOR_CLASSES)
 
-def workerfunc(test_im, test_im_predictions, x, itr, folder):
-    return get_colorized_image(test_im, test_im_predictions, False).save(folder + str(x) + '_' + str(itr) + '.jpg')
+def workerfunc(test_im, test_im_predictions, x, folder, ground_truth_img):
+    print ground_truth_img.shape
+    Image.fromarray(ground_truth_img.astype(np.uint8)).save(folder + str(x) + '_gt.jpg')
+    return get_colorized_image(test_im, test_im_predictions, False).save(folder + str(x) + '.jpg')
 
-def _colorize_and_save_test_images(sess, dataset, prediction, iteration, x, REWEIGHT_COLOR_CLASSES):
-  validation_image_batch, _ = dataset.get_validation_batch()
+def _colorize_and_save_test_images(sess, dataset, prediction, x, REWEIGHT_COLOR_CLASSES):
+  validation_image_batch, ground_truth_image_batch = dataset.get_validation_batch()
   validation_image_predictions = sess.run( prediction,  feed_dict = {x: validation_image_batch} )
   image_folder = 'reweight_images_validation/' if REWEIGHT_COLOR_CLASSES else 'images_validation/'
 
-  Parallel(n_jobs=4)(delayed(workerfunc)(validation_image_batch[i], validation_image_predictions[i], i, iteration,image_folder) for i in xrange(test_image_batch.shape[0]))
+  Parallel(n_jobs=4)(delayed(workerfunc)(validation_image_batch[i], validation_image_predictions[i], i,image_folder, ground_truth_image_batch[i]) for i in xrange(validation_image_batch.shape[0]))
 
 run_prediction()
