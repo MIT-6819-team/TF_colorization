@@ -3,6 +3,7 @@ experiments/enes/model*
 network/model*
 network/images*
 network/log*
+network/tests/
 
 # Ignore images. They have too high turnover.
 *.jpeg
