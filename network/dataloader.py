@@ -56,7 +56,7 @@ class DataLoader(object):
     def get_validation_batch(self):
         x_batch = np.zeros((len(self.validation_paths), self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
         y__batch = np.zeros((len(self.validation_paths), self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
-        gt_batch = np.zeros((len(self.validation_paths), self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
+        gt_batch = np.zeros((len(self.validation_paths), self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 3))
 
         for i in range(len(self.validation_paths)):
             path = self.test_batch[i]
@@ -95,7 +95,7 @@ class DataLoader(object):
 
         self.test_batch = self.all_paths[:self.batch_size]
 
-        validation_source = 'imagenet_validation_256_saturation_values.json.gz' if use_imagenet else 'places_2_256_validation_saturation_index.json.gz'
-        vf = ujson.load(gzip.open('../dataset_indexes/' + validation_source, 'rt'))
+        validation_source = 'imagenet_human_validation_set.json' if use_imagenet else 'no validation'
+        vf = ujson.load(open('../dataset_indexes/' + validation_source, 'rt'))
 
         self.validation_paths = [path for path in vf.keys() if vf[path] > self.SATURATION_THRESHOLD]
