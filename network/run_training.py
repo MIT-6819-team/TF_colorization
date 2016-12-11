@@ -59,7 +59,7 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL =
       _, loss_res = sess.run([train_step, loss], feed_dict={x: data_x, y_: data_y_, rebalance_: data_y_rebalance})
       lt3 = time.time()
 
-      if i % 1000 == 0 and i != 0:
+      if i % 1000 == 0:
         print "Generating images of hold out set."
         _colorize_and_save_test_images(sess, dataset, prediction, (i)/1000, x, REWEIGHT_COLOR_CLASSES)
         print "Saving the model."
@@ -74,9 +74,9 @@ def workerfunc(test_im, test_im_predictions, x, itr, folder):
 
 
 def _colorize_and_save_test_images(sess, dataset, prediction, iteration, x, REWEIGHT_COLOR_CLASSES):
-  test_image_batch, _ = dataset.get_test_batch()
+  test_image_batch, _, z = dataset.get_validation_batch()
   test_image_predictions = sess.run( prediction,  feed_dict = {x: test_image_batch} )
-  image_folder = '/test/{}/images/'.format(TEST_NAME)
+  image_folder = 'tests/{}/images/'.format(TEST_NAME)
     
   Parallel(n_jobs=4)(delayed(workerfunc)(test_image_batch[i], test_image_predictions[i], i, iteration,image_folder) for i in xrange(test_image_batch.shape[0]))
 
