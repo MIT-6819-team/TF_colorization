@@ -8,8 +8,8 @@ warnings.filterwarnings('ignore')
 import time, os
 from joblib import Parallel, delayed
 
-TEST_NAME = "constrained_batching"
-CONSTRAIN_BATCHING = True
+TEST_NAME = "random_batching"
+CONSTRAIN_BATCHING = False
 
 def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL = True, REWEIGHT_COLOR_CLASSES = True):
   print "Run training for test '{}'! Reweight: {} Batch Size: {} ".format(TEST_NAME, REWEIGHT_COLOR_CLASSES, BATCH_SIZE)
@@ -44,7 +44,7 @@ def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL =
             with open(logfile_name, 'r') as f:
                 starting_iterations = int(f.readlines()[-1].rstrip('\n'))
             print "Restoring model from iteration", starting_iterations
-            saver.restore(sess, "{}_step_".format(model_name, starting_iterations))
+            saver.restore(sess, "{}_step_{}".format(model_name, starting_iterations))
         except:
             print "ERROR loading model. Ignoring and starting model from scratch."
     else:
