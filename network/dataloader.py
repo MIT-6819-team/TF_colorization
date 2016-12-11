@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import ujson
 import gzip
 import numpy as np
@@ -23,7 +22,7 @@ class DataLoader(object):
 
     	if use_imagenet:
             if use_winter:
-    	        self.root = '../../datasets/imagenet/train256/'
+    	        self.root = '/root/persistant_data/datasets/imagenet/train256/'
             else:
                 self.root = '/data/vision/torralba/yusuf/imagenet/data/images/train256/'
     	else:
@@ -47,7 +46,7 @@ class DataLoader(object):
 
         for i in range(len(self.test_batch)):
             path = self.test_batch[i]
-            x, y_, _ = image_path_to_image_and_distribution_tensor(self.root + path)
+            x, y_, _, _ = image_path_to_image_and_distribution_tensor(self.root + path)
 
             x_batch[i, ...] = x.reshape((256, 256, 1))
             y__batch[i, ...] = y_
@@ -55,17 +54,17 @@ class DataLoader(object):
         return x_batch, y__batch
 
     def get_validation_batch(self):
-        print len(self.validation_paths)
         x_batch = np.zeros((len(self.validation_paths), self.INPUT_IMAGE_SIZE, self.INPUT_IMAGE_SIZE, 1))
         y__batch = np.zeros((len(self.validation_paths), self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
+        gt_batch = np.zeros((len(self.validation_paths), self.OUTPUT_IMAGE_SIZE, self.OUTPUT_IMAGE_SIZE, 313))
 
         for i in range(len(self.validation_paths)):
             path = self.test_batch[i]
-            x, y_, _ = image_path_to_image_and_distribution_tensor(self.root + path)
+            x, y_, _, ground_truth= image_path_to_image_and_distribution_tensor(self.root + path)
 
             x_batch[i, ...] = x.reshape((256, 256, 1))
             y__batch[i, ...] = y_
-	    
+            gt_batch[i, ...] = ground_truth
 
         return x_batch, y__batch, gt_batch
 
@@ -78,7 +77,7 @@ class DataLoader(object):
 
         for i in range(self.batch_size):
           path = self.all_paths[int(random.random() * len(self.all_paths))]
-          x, y_, y_reweight = image_path_to_image_and_distribution_tensor(self.root + path)
+          x, y_, y_reweight, _ = image_path_to_image_and_distribution_tensor(self.root + path)
 
           x_batch[i, ...] = x.reshape((256, 256, 1))
           y__batch[i, ...] = y_
@@ -96,9 +95,7 @@ class DataLoader(object):
 
         self.test_batch = self.all_paths[:self.batch_size]
 
-        validation_source = 'imagenet_human_validation_set.json' if use_imagenet else None
-        vf = ujson.load(open('../dataset_indexes/' + validation_source, 'rt'))
-
-	print "Load validation", len(vf.keys())
+        validation_source = 'imagenet_validation_256_saturation_values.json.gz' if use_imagenet else 'places_2_256_validation_saturation_index.json.gz'
+        vf = ujson.load(gzip.open('../dataset_indexes/' + validation_source, 'rt'))
 
         self.validation_paths = [path for path in vf.keys() if vf[path] > self.SATURATION_THRESHOLD]

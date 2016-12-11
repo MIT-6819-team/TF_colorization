@@ -40,12 +40,11 @@ def run_prediction(REWEIGHT_COLOR_CLASSES = True):
         _colorize_and_save_test_images(sess, dataset, prediction, x, REWEIGHT_COLOR_CLASSES)
 
 def workerfunc(test_im, test_im_predictions, x, folder, ground_truth_img):
-    print ground_truth_img.shape
     Image.fromarray(ground_truth_img.astype(np.uint8)).save(folder + str(x) + '_gt.jpg')
     return get_colorized_image(test_im, test_im_predictions, False).save(folder + str(x) + '.jpg')
 
 def _colorize_and_save_test_images(sess, dataset, prediction, x, REWEIGHT_COLOR_CLASSES):
-  validation_image_batch, ground_truth_image_batch = dataset.get_validation_batch()
+  validation_image_batch, _, ground_truth_image_batch = dataset.get_validation_batch()
   validation_image_predictions = sess.run( prediction,  feed_dict = {x: validation_image_batch} )
   image_folder = 'reweight_images_validation/' if REWEIGHT_COLOR_CLASSES else 'images_validation/'
 
