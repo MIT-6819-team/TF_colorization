@@ -14,8 +14,12 @@ class DataLoader(object):
     TRAIN_SOURCE = '../dataset_indexes/imagenet_train_256_saturation_values.json.gz'
     VALIDATION_SOURCE = '../dataset_indexes/imagenet_human_validation_set.json'
     CATEGORY_SOURCE = '../dataset_indexes/imagenet_train_256_category_paths_reweighted.json.gz'
+    # This is the per-example probability that an example will be pulled from a specific category.
+    # This encourages that images from the same category show up together more often.
+    CATEGORY_REWEIGHT_ALPHA = 0.1
+    
 
-    def __init__(self, batch_size, use_imagenet=True, batching_style="probablistic"):
+    def __init__(self, batch_size, use_imagenet=True, batching_style="reweighted"):
         self.batch_size = batch_size
         self.batching_style = batching_style
         self._load_paths_and_threshold(use_imagenet)
@@ -35,8 +39,21 @@ class DataLoader(object):
         '''
         Returns a list of filenames. Uses value from self.batching_style.
         '''
-        
-        
+        paths = []
+        if self.batching_style == "reweighted":
+            # Pick a category to focus on.
+            focus_category = self.categories[int(random.random()*len(self.categories))]
+            category_filenames = self.category_index[focus_category]
+            
+            for i in xrange(self.batch_size):
+                if random.random() <= self.CATEGORY_REWEIGHT_ALPHA:
+                    paths.append(category_filenames[int(random.random()*len(category_filenames))])
+                else:
+                    paths.append(self.all_paths[int(random.random() * len(self.all_paths))])
+        else:
+          paths = [self.all_paths[int(random.random() * len(self.all_paths))] for i in xrange(self.batch_size)]
+        return paths
+
         
     def next_batch(self):
         """Gets the next batch from the dataset and starts loading others in parallel."""
@@ -74,7 +91,7 @@ class DataLoader(object):
         
         paths = self.get_filenames_for_batch()
         
-        for path in paths:
+        for i,path in enumerate(paths):
           x, y_, y_reweight, _ = image_path_to_image_and_distribution_tensor(self.root + path)
 
           x_batch[i, ...] = x.reshape((256, 256, 1))
@@ -88,12 +105,19 @@ class DataLoader(object):
     def _load_paths_and_threshold(self, use_imagenet):
         '''Loads all the paths and removes those below the saturation threshold.'''
         
-        f = ujson.load(gzip.open(TRAIN_SOURCE, 'rt'))
-        self.all_paths = [path for path in f.keys() if f[path] > self.SATURATION_THRESHOLD]
+        if self.batching_style == "reweighted":
+            # Take the file list from the reweighted category list
+            f = ujson.load(gzip.open(self.CATEGORY_SOURCE, 'rt'))
+            self.all_paths = []
+            for category, paths in f.items():
+                self.all_paths += [path for path in paths if path > self.SATURATION_THRESHOLD]
+        else:
+            f = ujson.load(gzip.open(self.TRAIN_SOURCE, 'rt'))
+            self.all_paths = [path for path in f.keys() if f[path] > self.SATURATION_THRESHOLD]
 
-        vf = ujson.load(open(VALIDATION_SOURCE, 'rt'))
+        vf = ujson.load(open(self.VALIDATION_SOURCE, 'rt'))
         self.validation_paths = [path for path in vf.keys() if vf[path] > self.SATURATION_THRESHOLD]
         
 
-        self.category_index = ujson.load(gzip.open(CATEGORY_SOURCE, 'rt'))
+        self.category_index = ujson.load(gzip.open(self.CATEGORY_SOURCE, 'rt'))
         self.categories = self.category_index.keys()

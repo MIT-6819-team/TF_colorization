@@ -9,7 +9,7 @@ import time, os
 from joblib import Parallel, delayed
 
 TEST_NAME = "probablistic_reweighted_batching"
-BATCHING_STYLE = "probablistic"
+BATCHING_STYLE = "reweighted"
 
 def run_training(BATCH_SIZE = 32, ITERATIONS = 99999999999, RESTORE_FROM_MODEL = True, REWEIGHT_COLOR_CLASSES = True):
   print "Run training for test '{}' using batch style {}. Reweight: {} Batch Size: {}.".format(TEST_NAME, BATCHING_STYLE, REWEIGHT_COLOR_CLASSES, BATCH_SIZE)

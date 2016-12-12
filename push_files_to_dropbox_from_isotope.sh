@@ -1,5 +1,6 @@
 #!/bin/bash
 
-echo "Syncing network/tests to Winter's shared Dropbox"
+echo "Syncing network/tests to Winter's shared Dropbox every 10 minutes."
 
-rclone sync -v network/tests "Dropbox MIT:MIT/a_classes/6.819/final_project"
+#watch -n 600 -- 
+rclone sync network/tests 'Dropbox\ MIT:MIT/a_classes/6.819/final_project/' -v --transfers 20 
